@@ -1,6 +1,6 @@
 <template lang="html">
     <transition name="ansCardTrans">
-    <div class="answercard" v-show="isShowAnsCard" ref="scrollwrap" @scroll="scrollY">
+    <div class="answercard" v-show="isShowAnsCard" >
         <div class="answercard-main">
             <ul class="answercard-header" ref="ansheader">
                 <li>
@@ -15,23 +15,24 @@
                     未答
                     <span class="unanswer">{{unanswered}}</span>
                 </li>
-                <li class="iconfont icon-guanbi close-icon" @click="close"></li>
+                <li class="iconfont icon-guanbi close-icon" @click="close">
+                </li>
             </ul>
-            <div class="tiban" id="tiban" ref="tibanScroll">
-                <div class="classify-top fixedTitle" v-if="Object.keys(classifyData).length>1" v-show="fixedTitle" ref="fixed">
+            <div class="tiban" id="tiban" ref="scrollwrap">
+                <!-- <div class="classify-top fixedTitle" v-if="Object.keys(classifyData).length>1" v-show="fixedTitle" ref="fixed">
                     <span  class="level levle-left"></span>
                     {{fixedTitle}}
                     <span class="level levle-right"></span>
-                </div>
+                </div> -->
                 <div class="classify-item" v-for="(val,key) of classifyData" ref="listGroup">
-                    <div class="classify-top" v-if="Object.keys(classifyData).length>1">
+                    <div class="classify-top">
                         <span  class="level levle-left"></span>
                         {{val.title}}
                         <span class="level levle-right"></span>
                     </div>
                     <ul class="tiban-list">
                         <li  v-for="(item,index) in val.list" @click="jump(item.index)">
-                            <div :class="item.result">
+                            <div :class="''+item.result">
                                 {{item.index+1}}
                             </div>
                         </li>
@@ -45,26 +46,27 @@
 
 <script>
 import {classQues} from '../common/newDB'
+import BScroll from 'better-scroll'
 const TITLE_HEIGHT = 48
 export default {
     // 父组件传递的数据
     props:["data","count"],
     data(){
         return {
-            answered: 0,
-            unanswered: 0,
-            answertrue: 0,
-            answerfalse: 0,
+            // answered: 0,
+            // unanswered: 0,
+            // answertrue: 0,
+            // answerfalse: 0,
             isShowAnsCard: false,
             currentIndex: 0,
             titleHeight: 0,
-            diff: 0
+            diff: 0,
+            latterArr: ["A","B","C","D","E","F"]
         }
     },
     // 计算属性
     computed:{
         classifyData() {
-
             return classQues(this.data);
         },
         fixedTitle() {
@@ -72,80 +74,121 @@ export default {
               return ''
             }
             return this.classifyData[this.currentIndex] ? this.classifyData[this.currentIndex].title : ''
+        },
+        answertrue() {
+            var num = 0;
+            this.data.forEach((item,index)=>{
+                if(item.result) {
+                    num++
+                }
+            });
+            return num;
+        },
+        answerfalse() {
+            var num = 0;
+            this.data.forEach((item,index)=>{
+                if(item.result == false) {
+                    num++
+                }
+            });
+            return num;
+        },
+        unanswered() {
+            return this.count-(this.answertrue+this.answerfalse)
         }
     },
     created() {
-        this.listHeight = []
+        // this.listHeight = []
     },
     mounted(){
 
     },
     watch: {
-        isShowAnsCard(val) {
-            if(val) {
-                setTimeout(() => {
-                    this._calculateHeight()
-                }, 20)
-            }
-        },
+        // isShowAnsCard(val) {
+        //     if(val) {
+        //         setTimeout(() => {
+        //             this._calculateHeight();
+        //         }, 20)
+        //     }
+        // },
         diff(val) {
             let fixedTop = (val > 0 && val < TITLE_HEIGHT) ? val - TITLE_HEIGHT : 0
             if (this.fixedTop === fixedTop) {
               return
             }
-            this.fixedTop = fixedTop
-            this.$refs.fixed.style.transform = `translate3d(0,${fixedTop}px,0)`
+            this.fixedTop = fixedTop;
+            if(this.$refs.fixed) {
+                this.$refs.fixed.style.transform = `translate3d(0,${fixedTop}px,0)`
             }
+
+        }
+        // data() {
+        //     setTimeout(() => {
+        //         this._calculateHeight();
+        //     }, 20)
+        // }
     },
     methods: {
-        scrollY(e) {
-
-            const listHeight = this.listHeight
-            // 当滚动到顶部，newY>0
-            if (e.target.scrollTop  == 0) {
-              this.currentIndex = 0
-              return
-            }
-            // 在中间部分滚动
-            for (let i = 0; i < listHeight.length - 1; i++) {
-              let height1 = listHeight[i]
-              let height2 = listHeight[i + 1]
-              if (e.target.scrollTop >= height1 && e.target.scrollTop < height2) {
-                this.currentIndex = i
-                this.diff = height2 - e.target.scrollTop
-                return
-              }
-            }
-            // 当滚动到底部，且-newY大于最后一个元素的上限
-            this.currentIndex = listHeight.length - 2
-        },
-        _calculateHeight() {
-            this.listHeight = []
-            const list = this.$refs.listGroup
-            let height = 0
-            // this.$refs.ansheader.offsetHeight
-            this.listHeight.push(height)
-            for (let i = 0; i < list.length; i++) {
-              let item = list[i]
-              height += item.clientHeight
-              this.listHeight.push(height)
-            }
+        // scrollY(e) {
+        //     const listHeight = this.listHeight
+        //     // 当滚动到顶部，newY>0
+        //     if (e.target.scrollTop  == 0) {
+        //       this.currentIndex = 0
+        //       return
+        //     }
+        //     // 在中间部分滚动
+        //     for (let i = 0; i < listHeight.length - 1; i++) {
+        //       let height1 = listHeight[i]
+        //       let height2 = listHeight[i + 1]
+        //       if (e.target.scrollTop >= height1 && e.target.scrollTop < height2) {
+        //         this.currentIndex = i
+        //         this.diff = height2 - e.target.scrollTop
+        //         return
+        //       }
+        //     }
+        //     // 当滚动到底部，且-newY大于最后一个元素的上限
+        //     this.currentIndex = listHeight.length - 2
+        // },
+        // _calculateHeight() {
+        //     this.listHeight = []
+        //     const list = this.$refs.listGroup
+        //     let height = 0
+        //     // this.$refs.ansheader.offsetHeight
+        //     this.listHeight.push(height)
+        //     for (let i = 0; i < list.length; i++) {
+        //       let item = list[i]
+        //       height += item.clientHeight
+        //       this.listHeight.push(height)
+        //     }
+        // },
+        answer(item) {
+            var latter = [];
+            item.options.map((item,index)=> {
+                if(item.isAnswer) {
+                     latter.push(this.latterArr[index]);
+                }
+            })
+            return latter;
         },
         open() {
-            this.isShowAnsCard = true
-            this.data.map((item,index)=>{
-                if(item.checked && item.answer.indexOf(item.checked)>=0){
-                    item.result = "true"
-                    this.answertrue++
-                } else if(item.checked && item.answer.indexOf(item.checked)<0) {
-                    item.result = "false"
-                    this.answerfalse++
-                }
-            });
-            this.unanswered = this.count-(this.answertrue+this.answerfalse)
+            this.isShowAnsCard = true;
+            // this.data.map((item,index)=>{
+            //     if(item.checked && this.answer(item).indexOf(item.checked)>=0){
+            //         // item.result = "true"
+            //         this.answertrue++
+            //     } else if(item.checked && this.answer(item).indexOf(item.checked)<0) {
+            //         // item.result = "false"
+            //         this.answerfalse++
+            //     }
+            // });
+            // this.unanswered = this.count-(this.answertrue+this.answerfalse)
         },
         close(){
-            this.isShowAnsCard = false
+            this.isShowAnsCard = false;
+            // setTimeout(()=> {
+            //     this.answertrue = 0;
+            //     this.answerfalse = 0;
+            // },300)
         },
         jump(index){
             this.$emit("jump",index);
@@ -157,7 +200,7 @@ export default {
 
 <style lang="css" scoped>
     .ansCardTrans-enter-active, .fade-leave-active {
-        transition: all .5s;
+        transition: all .3s;
     }
     .ansCardTrans-enter {
         transform: translateY(100%);
@@ -169,27 +212,25 @@ export default {
         width:100%;
         z-index: 10;
         background: #fff;
-        overflow-y: scroll;
+        overflow: hidden;
     }
-    .answercard::-webkit-scrollbar{
-        display: none;
-    }
+
     .answercard-header {
-        position: fixed;
-        display: block;
-        padding: .3rem 0;
-        top: 0;
-        left: 0.3rem;
-        right: 0.3rem;
+        flex: 0  0 1rem;
+        line-height: 1rem;
+        position: relative;
+        z-index: 200;
+        box-sizing: border-box;
         border-bottom: 1px solid #f0f0f0;
         background-color: #fff;
-        z-index: 1;
+        display: flex;
+        justify-content: space-between;
     }
     .answercard-header li {
-        float: left;
         color: #333;
-        font-size: .28rem;
-        padding-right: .8rem;
+        font-size: .36rem;
+        padding-right: .6rem;
+        height: 100%;
     }
     .answercard-header li span {
         padding-left:.1rem;
@@ -206,16 +247,28 @@ export default {
     .answercard-header .close-icon{
         float: right;
         padding-right: 0;
+        width: 1.2rem;
+        text-align: center;
+        background: red;
+        color: #fff;
+        font-size: 0.4rem;
     }
     .answercard-main {
         padding: 0 0.3rem;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
     }
     .tiban{
         position: relative;
-        top: 0.9rem;
-        z-index: 0;
-        overflow: hidden;
-        padding-bottom: 0.3rem
+        overflow: auto;
+        padding-bottom: 0.3rem;
+        flex: 1;
+        -webkit-overflow-scrolling:touch
+    }
+    .tiban::-webkit-scrollbar,.answercard::-webkit-scrollbar{
+        display: none;
     }
     .tiban-list:after{
         content: " ";
@@ -240,18 +293,15 @@ export default {
         text-align: center;
         line-height: .72rem;
         color: #fff;
-        font-size: .28rem;
+        font-size: .36rem;
     }
     .classify-top {
-        /* padding-top: 0.3rem;
-        padding-bottom: 0.3rem; */
-        height: 48px;
-        font-size: 18px;
-        line-height: 48px;
+        height: 0.96rem;
+        font-size: 0.36rem;
+        line-height: 0.96rem;
         text-align: center;
         display: flex;
         align-items: baseline;
-        /* font-size: 0.36rem; */
     }
     .level {
     	display: inline-block;
@@ -275,7 +325,8 @@ export default {
         position: fixed;
         left: 0.3rem;
         right: 0.3rem;
-        top: 0.9rem;
-        background: #fff
+        top: 1rem;
+        background: #fff;
+        z-index: 50;
     }
 </style>

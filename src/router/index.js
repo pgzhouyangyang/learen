@@ -1,21 +1,17 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import Home from '@/components/home'
 import Questions from '@/components/questions'
 import Suiji from '@/components/suiji'
-import Test from '@/components/test'
+import Collect from '@/components/collect'
+import Error from '@/components/error'
 Vue.use(Router)
 
-export default new Router({
+const router = new Router({
   routes: [
-        {
+          {
             path: '/',
-            redirect: "/home"
-        },
-        {
-          path: '/home',
-          component: Home,
-        },
+            redirect: '/questions'
+          },
         {
           path: '/questions',
           name: "questions",
@@ -27,10 +23,26 @@ export default new Router({
           component: Suiji,
         },
         {
-          path: '/test',
-          name: "test",
-          component: Test,
+            path: '/collect',
+            name: "collect",
+            component: Collect,
+        },
+        {
+            path: '/error',
+            name: "error",
+            component: Error,
         }
 
   ]
 })
+// router.beforeEach((to, from, next) => {
+//     if(window.__wxjs_environment === 'miniprogram') {
+//         next();
+//     } else {
+//         next({
+//             path: '/NotFound',
+//
+//         })
+//     }
+// })
+export default router

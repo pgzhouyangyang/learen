@@ -1,4 +1,4 @@
-var imgbindclick = function(el,that) {
+const imgbindclick = function(el,that) {
     var imgs = el.querySelectorAll("img");
     var _this = that;
     if(imgs.length) {

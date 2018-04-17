@@ -11,6 +11,7 @@ export default {
 </script>
 
 <style>
+
 .app {
     height:100%;
 }
@@ -29,6 +30,7 @@ export default {
     overflow-x: hidden;
     display: flex;
     position: relative;
+    word-wrap: break-word;
 }
 .content::-webkit-scrollbar{
     display: none;
@@ -40,6 +42,8 @@ export default {
     line-height: 1.7;
     text-align: left;
     position: absolute;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 
@@ -64,7 +68,7 @@ export default {
     text-align: center;
     padding-top: 0.7rem;
     font-size: 0.26rem;
-    color: #999;
+    color: #333;
     background-position: center 0.14rem ;
     background-repeat: no-repeat;
     background-size: 0.46rem;

@@ -64,7 +64,7 @@
     text-align: center;
     border-radius: 50%;
     background: #fff;
-    box-sizing: border-box;
+    /* box-sizing: border-box; */
 }
 .item::before{
     content: "";
@@ -117,23 +117,33 @@
     background-color: #fff;
 }
 .best_explaintitle {
-    background: url(../../static/images/lx_best_explain.jpg) no-repeat;
-    background-size: 66px;
-    height: 22px;
+    /* background: url(../../static/images/lx_best_explain.jpg) no-repeat; */
+    background-size: 1.32rem;
+    height: 0.75rem;
+    line-height: 0.6rem;
+    border-bottom: 1px solid #18b4ed;
+}
+.best_explaintitle>span {
+    background: #18b4ed;
+    color: #fff;
+    padding: 5px 15px;
+    height: 0.75rem;
+    box-sizing: border-box;
+    float: left;
 }
 .best_explaincon {
-    color: #963;
-    font-size: 15px;
-    line-height: 20px;
-    padding-top: 15px;
+    color: #18bc80;
+    font-size:0.36rem;
+    line-height: 0.5rem;
+    padding: 5px 0 0 15px;
 }
 .item_checked .item_state {
-    background-color: #1bbe2a;
+    background-color: #18b4ed;
     color: #fff;
-    border-color: #1bbe2a;
+    border-color: #18b4ed;
 }
 .item_checked .item_con {
-    color:  #18bc80
+    color:  #18b4ed
 }
 .wrap img{
     display: block;
@@ -141,4 +151,27 @@
 /* 题目进度 */
 .progress {
     float: right;
+    background: #18b4ed;
+    padding: 0 5px;
+    color: #fff;
+    border-radius: 0.1rem;
+}
+.answer_wapp {
+    padding-top: 15px;
+    align-items: center;
+    line-height: 0.4rem;
+    font-size: 0.36rem;
+}
+.empty-block {
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+}
+.empty-block>div {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.36rem;
 }

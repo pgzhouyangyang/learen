@@ -69,15 +69,16 @@ var filterData=function(data){
 //     return arr;
 // }
 var classQues=function(dataList){
+    var typeArr = ["单选题","多选题","判断题","识图题","计算题"];
     var data = {};
     if(dataList) {
         dataList.map((item,index)=>{
             item.index = index;
-            if(data[item.questionType] == undefined) {
-                data[item.questionType] = [];
-                data[item.questionType].push(item)
+            if(data[typeArr[item.type-1]] == undefined) {
+                data[typeArr[item.type-1]] = [];
+                data[typeArr[item.type-1]].push(item)
             } else {
-                data[item.questionType].push(item)
+                data[typeArr[item.type-1]].push(item)
             }
 
         });

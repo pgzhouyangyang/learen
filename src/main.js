@@ -6,14 +6,13 @@ import router from './router'
 import store from './store'
 
 import '../static/js/flexible.js'
-import '../static/js/hammer.js'
 // axios 网络请求
 import axios from 'axios'
 Vue.prototype.axios = axios
 Vue.config.productionTip = false
-
 const FastClick = require('fastclick')
 FastClick.attach(document.body)
+
 /* eslint-disable no-new */
 new Vue({
   el: '#app',

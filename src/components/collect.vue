@@ -18,7 +18,7 @@
                     <div class="question_type" v-if="Object.keys(currentData).length">
                         <span>{{typeArr[currentData.type-1]}}</span>
                         <span>({{currentData.score}}分/题)</span>
-                        <span class="progress" @click="showCard"><span>{{currentIndex+1}}</span>/{{count}}</span>
+                        <span class="progress" @click="showCard"><span style="color:#10aeff">{{currentIndex+1}}</span>/{{count}}</span>
                     </div>
                     <!-- 正文 -->
                     <div class="question_content">
@@ -52,7 +52,7 @@
                             <span class="">查看答案</span>
                         </div>
                         <div class="answer_wapp">
-                            <div class="best_explaincon pt" v-if="currentData.type!=5" v-for="item in answer" v-html="item.latter+' '+item.content"></div>
+                            <div class="best_explaincon pt" v-if="currentData.type!=5" v-for="item in answer">{{item.latter+" "}}  {{item.content}}</div>
                             <div class="best_explaincon pt" v-if="currentData.type==5&&item.type=='y'" v-for="item in currentData.calculations">{{item.var}}={{item.val}}</div>
                         </div>
                     </div>
@@ -62,7 +62,7 @@
                     <div class="question_type" v-if="Object.keys(currentData).length">
                         <span>{{typeArr[currentData.type-1]}}</span>
                         <span>({{currentData.score}}分/题)</span>
-                        <span class="progress" @click="showCard"><span>{{currentIndex+1}}</span>/{{count}}</span>
+                        <span class="progress" @click="showCard"><span style="color:#10aeff">{{currentIndex+1}}</span>/{{count}}</span>
                     </div>
                     <!-- 正文 -->
                     <div class="question_content">
@@ -96,7 +96,7 @@
                             <span class="">查看答案</span>
                         </div>
                         <div class="answer_wapp">
-                            <div class="best_explaincon pt" v-if="currentData.type!=5" v-for="item in answer" v-html="item.latter+' '+item.content"></div>
+                            <div class="best_explaincon pt" v-if="currentData.type!=5" v-for="item in answer">{{item.latter+" "}}  {{item.content}}</div>
                             <div class="best_explaincon pt" v-if="currentData.type==5&&item.type=='y'" v-for="item in currentData.calculations">{{item.var}}={{item.val}}</div>
                         </div>
                     </div>
@@ -108,7 +108,7 @@
         <div class="footbtns" v-if="Object.keys(currentData).length">
             <span class="pre" @click="preEvent" ref="preBtn">上一题</span>
             <span class="next" @click="nextEvent" ref="nextBtn">下一题</span>
-            <span :class="isCollect?'collecton':'collect'" @click="collectEvent">{{isCollect?"移除收藏":"收藏本题"}}</span>
+            <span :class="isCollect?'collecton':'collect'">{{isCollect?"移除收藏":"收藏本题"}}</span>
             <span :class="isExplain?'explainon':'explain'" @click="isExplainEvent">{{isExplain?"隐藏答案":"查看答案"}}</span>
         </div>
         <!-- 题卡组件 -->
@@ -125,7 +125,7 @@
 
 <script>
 import {mapMutations, mapState} from 'vuex'
-import {getQuestionType, getTopQuestion, getQuestion, favorite, delFavorite} from '../api/request'
+import {getTopFavorite, getFavoriteType, getFavorite, favorite, delFavorite} from '../api/request'
 import {filterData} from '../common/newDB'
 import Answercard from "./answercard"
 import { Previewer, TransferDom, Loading, Icon } from 'vux'
@@ -186,7 +186,8 @@ export default {
             disX: 0,
             isLoading: true,
             ids: [],
-            isempty: false
+            isempty: false,
+            collectIds: []
 
         }
     },
@@ -200,28 +201,17 @@ export default {
     // 生命周期函数 组件创建完成
     created(){
         this.getQuery();
-        if(this.getQuery.type) {
-            document.title="专项练习";
-        } else {
-            document.title="顺序练习";
-        }
+        document.title="收藏试题";
         var parms = {...this.query};
-        this.isLoading = false;
-
-        getTopQuestion(parms).then((data)=> {
-            this.dataList = data.data.testList;
+        getFavoriteType(parms).then((data)=> {
+            this.dataList = data.data.typeList;
+            this.count = data.data.typeList.length;
             if(this.dataList.length) {
-                this.count = data.data.count;
-                this.currentData = this.dataList[this.currentIndex];
-                getQuestionType(parms).then((data)=> {
-                    this.dataList = this.appendData(data.data.typeList,this.dataList);
-                    this.isLoading = true;
-                })
+                this.jumpIndex(parseInt(parms.index));
             } else {
                 this.isempty = true;
             }
-        });
-
+        })
     },
     // 监听
     watch:{
@@ -310,25 +300,38 @@ export default {
                     endIndex = index;
                 }
             } else {
-                beginIndex = index;
+                beginIndex = parseInt(index/20)*size;
                 endIndex = beginIndex + size;
+                if((index+1)%20 == 0) {
+                    endIndex += size
+                }
+                if((index-1)%20 == 0) {
+                    beginIndex -= size
+                }
                 if(endIndex >= this.count) {
                     endIndex = this.count;
+                }
+                if(beginIndex<=0) {
+                    beginIndex = 0;
                 }
             }
             var ids = [];
             for(var i = beginIndex; i < endIndex; i++) {
                 ids.push(this.dataList[i].id);
             }
-            return ids;
+            this.ids = ids
         },
-        getData() {
+        getData(fn) {
+            this.$vux.loading.show({
+                text: '加载中'
+            });
             var parms = {...this.query};
             parms.ids =  this.ids
-            getQuestion(parms).then((data)=> {
+            getFavorite(parms).then((data)=> {
                 this.dataList = this.appendData(this.dataList,data.data.testList);
                 this.currentData = this.dataList[this.currentIndex];
-                this.isLoading = true;
+                this.$vux.loading.hide();
+                fn&&fn()
             })
         },
         appendData(data,append) {
@@ -431,40 +434,27 @@ export default {
                 });
                 return;
             };
-            if(!this.isLoading) {
-                this.$vux.loading.show({
-                    text: '加载中'
+
+            this.translateName = "translate-right";
+            this.on = !this.on;
+
+            if(this.currentIndex - 1 >= 0 && !this.dataList[this.currentIndex-1].content) {
+                this.ids = this.splitIds("pre", this.currentIndex);
+                this.isLoading = false;
+                this.getData(()=> {
+                    this.currentIndex--;
                 });
-                var timer = setInterval(()=> {
-                    if(this.isLoading) {
-                        clearInterval(timer);
-                        this.$vux.loading.hide();
-                        this.currentIndex--;
-                    }
-                }, 10)
             } else {
                 this.currentIndex--;
             }
-            // this.$refs.preBtn.classList.add("active");
-            // setTimeout(() => {
-            //     this.$refs.preBtn.classList.remove("active");
-            // },300)
             if(this.isAnswer == "answer_no") {
                 this.isExplain = false;
             } else {
                 this.isExplain = true;
             }
-            this.translateName = "translate-right";
-            this.on = !this.on;
-            if(this.currentIndex - 1 > 0 && !this.dataList[this.currentIndex-1].content) {
-                this.ids = this.splitIds("pre", this.currentIndex);
-                this.isLoading = false;
-                this.getData();
-            }
         },
         // 下一题
         nextEvent() {
-
             if(this.currentIndex>=this.count-1){
                 // 显示文字
                 this.$vux.toast.show({
@@ -475,86 +465,33 @@ export default {
                 });
                 return;
             }
-            if(!this.isLoading) {
-                this.$vux.loading.show({
-                    text: '加载中'
+            this.translateName = "translate-left"
+            this.on = !this.on;
+            if(this.currentIndex+1<=this.count&&!this.dataList[this.currentIndex+1].content) {
+                this.splitIds("next",this.currentIndex+1);
+                this.getData(()=> {
+                    this.currentIndex++
                 });
-                var timer = setInterval(()=> {
-                    if(this.isLoading) {
-                        clearInterval(timer);
-                        this.$vux.loading.hide();
-                        this.currentIndex++;
-                    }
-                }, 10)
             } else {
-                this.currentIndex++;
+                this.currentIndex++
             }
-            // this.$refs.nextBtn.classList.add("active");
-            // setTimeout(() => {
-            //     this.$refs.nextBtn.classList.remove("active");
-            // },300);
             if(this.isAnswer == "answer_no") {
                 this.isExplain = false;
             } else {
                 this.isExplain = true;
             }
-
-            this.translateName = "translate-left"
-            this.on = !this.on;
-            if(this.currentIndex + 1 < this.count &&  !this.dataList[this.currentIndex+1].content) {
-                this.ids = this.splitIds("next",this.currentIndex+1);
-                this.isLoading = false;
-                this.getData();
-            }
         },
         // 显示题卡
         showCard(){
             this.$refs.answercardRef.open();
-            if(!this.isLoading) {
-                this.$vux.loading.show({
-                    text: '加载中'
-                });
-                var timer = setInterval(()=> {
-                    if(this.isLoading) {
-                        clearInterval(timer);
-                        this.$vux.loading.hide();
-                    }
-                }, 10)
-            }
         },
-        // 调到指定题目
-        jumpIndex(index){
+        // 跳转指定题目
+        jumpIndex(index) {
             this.currentIndex = index;
-            var toLoading = false;
-            var beginIndex = parseInt(this.currentIndex/20)*20;
-            this.ids = [];
             if(!this.dataList[this.currentIndex].content) {
-                this.ids.push(...this.splitIds("next", beginIndex));
-                toLoading = true;
-            }
-            if(this.currentIndex == beginIndex + 19 && this.currentIndex + 1 < this.count && !this.dataList[this.currentIndex + 1].content) {
-                this.ids.push(...this.splitIds("next", this.currentIndex+1));
-                toLoading = true;
-            }
-            if(this.currentIndex == beginIndex && this.currentIndex - 1 > 0 && !this.dataList[this.currentIndex - 1].content) {
-                this.ids.push(...this.splitIds("pre", this.currentIndex));
-                toLoading = true;
-            }
-            if(toLoading) {
-                this.isLoading = false;
+                this.splitIds("next",index);
                 this.getData();
-                if(!this.isLoading) {
-                    this.$vux.loading.show({
-                        text: '加载中'
-                    });
-                    var timer = setInterval(()=> {
-                        if(this.isLoading) {
-                            clearInterval(timer);
-                            this.$vux.loading.hide();
-                        }
-                    }, 10)
-                }
-            };
+            }
             if(this.isAnswer == "answer_no") {
                 this.isExplain = false;
             } else {
@@ -590,36 +527,35 @@ export default {
                 }
             }
         },
-        collectEvent() {
-            if(this.isCollect) {
-                delFavorite({
-                    testId: this.currentData.id
-                }).then((data)=> {
-                    if(data.data.success) {
-                        this.$set(this.currentData,"favorite",false)
-                        this.$vux.toast.show({
-                         text: '取消成功',
-                         type: "success",
-                         time: 1000
-                        })
-                    }
-
-                })
-            } else {
-                favorite({
-                    testId: this.currentData.id
-                }).then((data)=> {
-                    if(data.data.success) {
-                        this.$set(this.currentData,"favorite",true)
-                        this.$vux.toast.show({
-                         text: '收藏成功',
-                         type: "success",
-                         time: 1000
-                        })
-                    }
-                })
-            }
-        }
+        // collectEvent() {
+        //     if(this.isCollect) {
+        //         delFavorite({
+        //             testId: this.currentData.id
+        //         }).then((data)=> {
+        //             if(data.data.success) {
+        //                 this.$set(this.currentData,"favorite",false)
+        //                 this.$vux.toast.show({
+        //                  text: '取消成功',
+        //                  type: "success",
+        //                  time: 1000
+        //                 })
+        //             };
+        //         })
+        //     } else {
+        //         favorite({
+        //             testId: this.currentData.id
+        //         }).then((data)=> {
+        //             if(data.data.success) {
+        //                 this.$set(this.currentData,"favorite",true)
+        //                 this.$vux.toast.show({
+        //                  text: '收藏成功',
+        //                  type: "success",
+        //                  time: 1000
+        //                 })
+        //             }
+        //         })
+        //     }
+        // }
     }
 }
 </script>
