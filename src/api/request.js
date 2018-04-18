@@ -87,3 +87,11 @@ export const getTopError = (data)=> request("/wechat/question/getTopError",data,
 export const getErrorType = (data)=> request("/wechat/question/getErrorType",data,"POST");
 
 export const getError = (data)=> request("/wechat/question/getError",data,"POST");
+
+// 记录学习位置
+export const saveLearnLocation = (data)=> request("/wechat/question/saveLearnHistory",data,"POST");
+// 记录答题记录
+export const saveAnswerHistory = (data)=> request("/wechat/question/saveAnswerHistory",data,"POST");
+
+// 获取学习记录点
+export const getLearnLocation = data => request("/question/getLearnHistory", data, "POST");

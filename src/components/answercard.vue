@@ -32,7 +32,7 @@
                     </div>
                     <ul class="tiban-list">
                         <li  v-for="(item,index) in val.list" @click="jump(item.index)">
-                            <div :class="''+item.result">
+                            <div :class="item.result==1?'true':(item.result==0?'false':'')">
                                 {{item.index+1}}
                             </div>
                         </li>

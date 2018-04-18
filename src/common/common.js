@@ -7,12 +7,12 @@ const imgbindclick = function(el,that) {
                 imgs[i].onclick=function(event){
                     event.stopPropagation();
                     var p = imgs[i].clientWidth/imgs[i].clientHeight
-                    var h = 800/p
+                    var h = 700/p
                     _this.previewerList= [(
                         {
                             src: this.src,
                             h: h,
-                            w: 800,
+                            w: 700,
                         }
                     )];
                     _this.imgIndex = i;

@@ -8,7 +8,7 @@
         </div>
         <!-- 切换答题模式 -->
         <div class="top-tabbar" v-if="Object.keys(currentData).length">
-            <span :class="isAnswer=='answer_no'?'active':''" @click="tabChange('answer_no')">答题模式{{Object.keys(currentData).length}}</span>
+            <span :class="isAnswer=='answer_no'?'active':''" @click="tabChange('answer_no')">答题模式</span>
             <span :class="isAnswer=='answer_yes'?'active':''" @click="tabChange('answer_yes')">背题模式</span>
         </div>
         <!-- 试题内容 -->
@@ -125,7 +125,7 @@
 
 <script>
 import {mapMutations, mapState} from 'vuex'
-import {getTopError, getErrorType, getError, favorite, delFavorite} from '../api/request'
+import {getQuestionType, getQuestion, favorite, delFavorite} from '../api/request'
 import {filterData} from '../common/newDB'
 import Answercard from "./answercard"
 import { Previewer, TransferDom, Loading, Icon } from 'vux'
@@ -200,13 +200,14 @@ export default {
     },
     // 生命周期函数 组件创建完成
     created(){
-        // this.$vux.loading.show({
-        //     text: '加载中'
-        // });
         this.getQuery();
-        document.title="错题回顾";
+        if(this.getQuery.type) {
+            document.title="专项练习";
+        } else {
+            document.title="顺序练习";
+        }
         var parms = {...this.query};
-        getErrorType(parms).then((data)=> {
+        getQuestionType(parms).then((data)=> {
             this.dataList = data.data.typeList;
             this.count = data.data.typeList.length;
             if(this.dataList.length) {
@@ -309,19 +310,21 @@ export default {
             var beginIndex = 0;
             var endIndex = 0;
             if(operation == "pre") {
-                if(index >= size) {
-                    beginIndex = index - size;
-                }
-                if(index > 0) {
-                    endIndex = index;
-                }
+                beginIndex = parseInt(index/20)*size;
+                endIndex = beginIndex + size;
+                // if(index >= size) {
+                //     beginIndex = index - size;
+                // }
+                // if(index > 0) {
+                //     endIndex = index;
+                // }
             } else {
                 beginIndex = parseInt(index/20)*size;
                 endIndex = beginIndex + size;
-                if((index)%20 == 0) {
+                if((index+1)%20 == 0) {
                     endIndex += size
                 }
-                if((index)%20 == 0) {
+                if(index%20 == 0) {
                     beginIndex -= size
                 }
                 if(endIndex >= this.count) {
@@ -335,13 +338,13 @@ export default {
             for(var i = beginIndex; i < endIndex; i++) {
                 ids.push(this.dataList[i].id);
             }
+            console.log(ids);
             this.ids = ids
         },
         getData(fn) {
-            this.isLoading = true;
             var parms = {...this.query};
             parms.ids =  this.ids
-            getError(parms).then((data)=> {
+            getQuestion(parms).then((data)=> {
                 this.dataList = this.appendData(this.dataList,data.data.testList);
                 this.currentData = this.dataList[this.currentIndex];
                 this.$vux.loading.hide();
@@ -451,13 +454,17 @@ export default {
                 });
                 return;
             };
+
             this.translateName = "translate-right";
             this.on = !this.on;
-            this.currentIndex--;
-            if(this.currentIndex - 1 >= 0 && !this.dataList[this.currentIndex-1].content) {
-                this.splitIds("pre", this.currentIndex);
+            if(!this.dataList[this.currentIndex-1].content) {
+                this.ids = this.splitIds("pre", this.currentIndex-1);
                 this.isLoading = false;
-                this.getData();
+                this.getData(()=> {
+                    this.currentIndex--;
+                });
+            } else {
+                this.currentIndex--;
             }
             if(this.isAnswer == "answer_no") {
                 this.isExplain = false;
@@ -477,13 +484,16 @@ export default {
                 });
                 return;
             }
-            this.currentIndex++;
-            if(this.currentIndex+1<this.count&&!this.dataList[this.currentIndex+1].content) {
-                this.splitIds("next",this.currentIndex+1);
-                this.getData();
-            }
             this.translateName = "translate-left"
             this.on = !this.on;
+            if(!this.dataList[this.currentIndex+1].content) {
+                this.splitIds("next",this.currentIndex+1);
+                this.getData(()=> {
+                    this.currentIndex++
+                });
+            } else {
+                this.currentIndex++
+            }
             if(this.isAnswer == "answer_no") {
                 this.isExplain = false;
             } else {
@@ -496,16 +506,13 @@ export default {
         },
         // 跳转指定题目
         jumpIndex(index) {
-            if(!this.dataList[index].content) {
+            this.currentIndex = index;
+            if(!this.dataList[this.currentIndex].content) {
                 this.$vux.loading.show({
                     text: '加载中'
                 });
                 this.splitIds("next",index);
-                this.getData(()=> {
-                    this.currentIndex = index;
-                });
-            } else {
-                this.currentIndex = index;
+                this.getData();
             }
             if(this.isAnswer == "answer_no") {
                 this.isExplain = false;
@@ -524,7 +531,7 @@ export default {
                         imgs[i].onclick=function(event){
                             event.stopPropagation();
                             var p = imgs[i].clientWidth/imgs[i].clientHeight
-                            var h = 700/p
+                            var h = 800/p
                             _this.previewerList= [(
                                 {
                                     src: this.src,

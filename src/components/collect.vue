@@ -18,7 +18,7 @@
                     <div class="question_type" v-if="Object.keys(currentData).length">
                         <span>{{typeArr[currentData.type-1]}}</span>
                         <span>({{currentData.score}}分/题)</span>
-                        <span class="progress" @click="showCard"><span style="color:#10aeff">{{currentIndex+1}}</span>/{{count}}</span>
+                        <span class="progress" @click="showCard"><span>{{currentIndex+1}}</span>/{{count}}</span>
                     </div>
                     <!-- 正文 -->
                     <div class="question_content">
@@ -26,7 +26,7 @@
                     </div>
                     <!-- 选项————答题模式 -->
                     <div class="question_options" v-if="isAnswer=='answer_no'&&currentData.type!=5">
-                        <div :class="checked.indexOf(latterArr[num])>=0?'item item_checked':'item'" v-for="(options,num) in currentData.options" @click="response(latterArr[num],options)" :answer="num+1">
+                        <div :class="checked, options,latterArr[num],isExplain|answerNoClass" v-for="(options,num) in currentData.options" @click="response(latterArr[num],options)" :answer="num+1">
                             <div class="item_state">
                                 {{latterArr[num]}}
                             </div>
@@ -37,7 +37,7 @@
                     </div>
                     <!-- 选项————背题模式 -->
                     <div class="question_options" v-if="isAnswer=='answer_yes'&&currentData.type!=5">
-                        <div :class="options |filterClass" v-for="(options,num) in currentData.options">
+                        <div :class="options |answerYesClass" v-for="(options,num) in currentData.options">
                             <div class="item_state">
                                 {{latterArr[num]}}
                             </div>
@@ -47,12 +47,12 @@
                         </div>
                     </div>
                     <!-- 解释 -->
-                    <div class="best_explain" v-if="isExplain">
+                    <div class="best_explain" v-if="isExplain&&currentData.type == 5">
                         <div class="best_explaintitle" ref="explaintitle">
                             <span class="">查看答案</span>
                         </div>
                         <div class="answer_wapp">
-                            <div class="best_explaincon pt" v-if="currentData.type!=5" v-for="item in answer">{{item.latter+" "}}  {{item.content}}</div>
+                            <!-- <div class="best_explaincon pt" v-if="currentData.type!=5" v-for="item in answer">{{item.latter+" "}}  {{item.content}}</div> -->
                             <div class="best_explaincon pt" v-if="currentData.type==5&&item.type=='y'" v-for="item in currentData.calculations">{{item.var}}={{item.val}}</div>
                         </div>
                     </div>
@@ -62,7 +62,7 @@
                     <div class="question_type" v-if="Object.keys(currentData).length">
                         <span>{{typeArr[currentData.type-1]}}</span>
                         <span>({{currentData.score}}分/题)</span>
-                        <span class="progress" @click="showCard"><span style="color:#10aeff">{{currentIndex+1}}</span>/{{count}}</span>
+                        <span class="progress" @click="showCard"><span>{{currentIndex+1}}</span>/{{count}}</span>
                     </div>
                     <!-- 正文 -->
                     <div class="question_content">
@@ -70,7 +70,7 @@
                     </div>
                     <!-- 选项————答题模式 -->
                     <div class="question_options" v-if="isAnswer=='answer_no'&&currentData.type!=5">
-                        <div :class="checked.indexOf(latterArr[num])>=0?'item item_checked':'item'" v-for="(options,num) in currentData.options" @click="response(latterArr[num],options)" :answer="num+1" >
+                        <div :class="checked, options,latterArr[num],isExplain|answerNoClass" v-for="(options,num) in currentData.options" @click="response(latterArr[num],options)" :answer="num+1" >
                             <div class="item_state">
                                 {{latterArr[num]}}
                             </div>
@@ -81,7 +81,7 @@
                     </div>
                     <!-- 选项————背题模式 -->
                     <div class="question_options" v-if="isAnswer=='answer_yes'&&currentData.type!=5">
-                        <div :class="options|filterClass" v-for="(options,num) in currentData.options">
+                        <div :class="options|answerYesClass" v-for="(options,num) in currentData.options">
                             <div class="item_state">
                                 {{latterArr[num]}}
                             </div>
@@ -91,12 +91,12 @@
                         </div>
                     </div>
                     <!-- 解释 -->
-                    <div class="best_explain" v-if="isExplain">
+                    <div class="best_explain" v-if="isExplain&&currentData.type == 5">
                         <div class="best_explaintitle" ref="explaintitle">
                             <span class="">查看答案</span>
                         </div>
                         <div class="answer_wapp">
-                            <div class="best_explaincon pt" v-if="currentData.type!=5" v-for="item in answer">{{item.latter+" "}}  {{item.content}}</div>
+                            <!-- <div class="best_explaincon pt" v-if="currentData.type!=5" v-for="item in answer">{{item.latter+" "}}  {{item.content}}</div> -->
                             <div class="best_explaincon pt" v-if="currentData.type==5&&item.type=='y'" v-for="item in currentData.calculations">{{item.var}}={{item.val}}</div>
                         </div>
                     </div>
@@ -237,7 +237,7 @@ export default {
         }
     },
     filters:{
-        filterClass(item){
+        answerYesClass(item){
             if(item.isAnswer){
                 return "item item_checked"
             }
@@ -245,6 +245,19 @@ export default {
             //     // return "item item_wrong"
             // }
             return "item"
+        },
+        answerNoClass(checked,options, latter,isExplain) {
+            if(isExplain) {
+                if(options.isAnswer) {
+                    return "item item_checked"
+                }
+                return "item"
+            } else {
+                if(checked.indexOf(latter)>=0) {
+                    return "item item_checked"
+                }
+                return "item"
+            }
         }
     },
     computed: {
@@ -302,10 +315,10 @@ export default {
             } else {
                 beginIndex = parseInt(index/20)*size;
                 endIndex = beginIndex + size;
-                if((index+1)%20 == 0) {
+                if((index)%20 == 0) {
                     endIndex += size
                 }
-                if((index-1)%20 == 0) {
+                if((index)%20 == 0) {
                     beginIndex -= size
                 }
                 if(endIndex >= this.count) {
@@ -322,9 +335,6 @@ export default {
             this.ids = ids
         },
         getData(fn) {
-            this.$vux.loading.show({
-                text: '加载中'
-            });
             var parms = {...this.query};
             parms.ids =  this.ids
             getFavorite(parms).then((data)=> {
@@ -391,6 +401,9 @@ export default {
         },
         //选择答案
         response(letter,options){
+            if(this.isExplain) {
+                return
+            }
             if (this.currentData.type == 2 ) {
                 if (this.checked.indexOf(letter)>=0) {
                     this.checked = this.checked.replace(letter,"");
@@ -437,15 +450,11 @@ export default {
 
             this.translateName = "translate-right";
             this.on = !this.on;
-
+            this.currentIndex--;
             if(this.currentIndex - 1 >= 0 && !this.dataList[this.currentIndex-1].content) {
-                this.ids = this.splitIds("pre", this.currentIndex);
+                this.splitIds("pre", this.currentIndex);
                 this.isLoading = false;
-                this.getData(()=> {
-                    this.currentIndex--;
-                });
-            } else {
-                this.currentIndex--;
+                this.getData();
             }
             if(this.isAnswer == "answer_no") {
                 this.isExplain = false;
@@ -467,13 +476,10 @@ export default {
             }
             this.translateName = "translate-left"
             this.on = !this.on;
-            if(this.currentIndex+1<=this.count&&!this.dataList[this.currentIndex+1].content) {
+            this.currentIndex++
+            if(this.currentIndex+1<this.count&&!this.dataList[this.currentIndex+1].content) {
                 this.splitIds("next",this.currentIndex+1);
-                this.getData(()=> {
-                    this.currentIndex++
-                });
-            } else {
-                this.currentIndex++
+                this.getData();
             }
             if(this.isAnswer == "answer_no") {
                 this.isExplain = false;
@@ -487,10 +493,17 @@ export default {
         },
         // 跳转指定题目
         jumpIndex(index) {
-            this.currentIndex = index;
-            if(!this.dataList[this.currentIndex].content) {
+
+            if(!this.dataList[index].content) {
+                this.$vux.loading.show({
+                    text: '加载中'
+                });
                 this.splitIds("next",index);
-                this.getData();
+                this.getData(()=> {
+                    this.currentIndex = index;
+                });
+            } else {
+                this.currentIndex = index;
             }
             if(this.isAnswer == "answer_no") {
                 this.isExplain = false;
@@ -509,12 +522,12 @@ export default {
                         imgs[i].onclick=function(event){
                             event.stopPropagation();
                             var p = imgs[i].clientWidth/imgs[i].clientHeight
-                            var h = 800/p
+                            var h = 700/p
                             _this.previewerList= [(
                                 {
                                     src: this.src,
                                     h: h,
-                                    w: 800,
+                                    w: 700,
                                 }
                             )];
                             _this.imgIndex = i;

@@ -152,7 +152,7 @@
 .progress {
     float: right;
     background: #18b4ed;
-    padding: 0 5px;
+    padding: 0 10px;
     color: #fff;
     border-radius: 0.1rem;
 }

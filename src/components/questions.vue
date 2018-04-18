@@ -26,7 +26,7 @@
                     </div>
                     <!-- 选项————答题模式 -->
                     <div class="question_options" v-if="isAnswer=='answer_no'&&currentData.type!=5">
-                        <div :class="checked.indexOf(latterArr[num])>=0?'item item_checked':'item'" v-for="(options,num) in currentData.options" @click="response(latterArr[num],options)" :answer="num+1">
+                        <div :class="checked, options,latterArr[num],isExplain|answerNoClass" v-for="(options,num) in currentData.options" @click="response(latterArr[num],options)" :answer="num+1">
                             <div class="item_state">
                                 {{latterArr[num]}}
                             </div>
@@ -37,7 +37,7 @@
                     </div>
                     <!-- 选项————背题模式 -->
                     <div class="question_options" v-if="isAnswer=='answer_yes'&&currentData.type!=5">
-                        <div :class="options |filterClass" v-for="(options,num) in currentData.options">
+                        <div :class="options |answerYesClass" v-for="(options,num) in currentData.options">
                             <div class="item_state">
                                 {{latterArr[num]}}
                             </div>
@@ -47,17 +47,16 @@
                         </div>
                     </div>
                     <!-- 解释 -->
-                    <div class="best_explain" v-if="isExplain">
+                    <div class="best_explain" v-if="isExplain&&currentData.type==5">
                         <div class="best_explaintitle" ref="explaintitle">
                             <span class="">查看答案</span>
                         </div>
                         <div class="answer_wapp">
-                            <div class="best_explaincon pt" v-if="currentData.type!=5" v-for="item in answer" v-html="item.latter+' '+item.content"></div>
+                            <!-- <div class="best_explaincon pt" v-if="currentData.type!=5" v-for="item in answer" v-html="item.latter+' '+item.content"></div> -->
                             <div class="best_explaincon pt" v-if="currentData.type==5&&item.type=='y'" v-for="item in currentData.calculations">{{item.var}}={{item.val}}</div>
                         </div>
                     </div>
                 </div>
-
                 <div class="questions-item" v-else key="off">
                     <div class="question_type" v-if="Object.keys(currentData).length">
                         <span>{{typeArr[currentData.type-1]}}</span>
@@ -70,7 +69,7 @@
                     </div>
                     <!-- 选项————答题模式 -->
                     <div class="question_options" v-if="isAnswer=='answer_no'&&currentData.type!=5">
-                        <div :class="checked.indexOf(latterArr[num])>=0?'item item_checked':'item'" v-for="(options,num) in currentData.options" @click="response(latterArr[num],options)" :answer="num+1" >
+                        <div :class="checked, options,latterArr[num],isExplain|answerNoClass" v-for="(options,num) in currentData.options" @click="response(latterArr[num],options)" :answer="num+1" >
                             <div class="item_state">
                                 {{latterArr[num]}}
                             </div>
@@ -81,7 +80,7 @@
                     </div>
                     <!-- 选项————背题模式 -->
                     <div class="question_options" v-if="isAnswer=='answer_yes'&&currentData.type!=5">
-                        <div :class="options|filterClass" v-for="(options,num) in currentData.options">
+                        <div :class="options|answerYesClass" v-for="(options,num) in currentData.options">
                             <div class="item_state">
                                 {{latterArr[num]}}
                             </div>
@@ -91,7 +90,7 @@
                         </div>
                     </div>
                     <!-- 解释 -->
-                    <div class="best_explain" v-if="isExplain">
+                    <div class="best_explain" v-if="isExplain&&currentData.type==5">
                         <div class="best_explaintitle" ref="explaintitle">
                             <span class="">查看答案</span>
                         </div>
@@ -125,7 +124,7 @@
 
 <script>
 import {mapMutations, mapState} from 'vuex'
-import {getQuestionType, getTopQuestion, getQuestion, favorite, delFavorite} from '../api/request'
+import {getQuestionType, getTopQuestion, getQuestion, favorite, delFavorite,saveLearnLocation, saveAnswerHistory,getLearnLocation} from '../api/request'
 import {filterData} from '../common/newDB'
 import Answercard from "./answercard"
 import { Previewer, TransferDom, Loading, Icon } from 'vux'
@@ -200,27 +199,31 @@ export default {
     // 生命周期函数 组件创建完成
     created(){
         this.getQuery();
-        if(this.getQuery.type) {
+        console.log(this.query);
+        if(this.query.type) {
             document.title="专项练习";
         } else {
             document.title="顺序练习";
         }
+        getLearnLocation({
+            skillItem: this.query.skillItem,
+            skillLevel: this.query.skillLevel
+        }).then((data)=> {
+            console.log(data);
+        })
         var parms = {...this.query};
-        this.isLoading = false;
-
-        getTopQuestion(parms).then((data)=> {
-            this.dataList = data.data.testList;
+        this.$vux.loading.show({
+            text: '加载中'
+        });
+        getQuestionType(parms).then((data)=> {
+            this.dataList = data.data.typeList;
+            this.count = data.data.typeList.length;
             if(this.dataList.length) {
-                this.count = data.data.count;
-                this.currentData = this.dataList[this.currentIndex];
-                getQuestionType(parms).then((data)=> {
-                    this.dataList = this.appendData(data.data.typeList,this.dataList);
-                    this.isLoading = true;
-                })
+                this.jumpIndex(parseInt(parms.index));
             } else {
                 this.isempty = true;
             }
-        });
+        })
 
     },
     // 监听
@@ -233,6 +236,9 @@ export default {
             }else{
                 this.checked="";
             };
+            saveLearnLocation(this.saveLearnLocationPramas).then((data)=> {
+                console.log(data);
+            })
             this.$nextTick(()=>{
                 var timer = setInterval(()=> {
                     if(this.isLoading) {
@@ -247,7 +253,7 @@ export default {
         }
     },
     filters:{
-        filterClass(item){
+        answerYesClass(item){
             if(item.isAnswer){
                 return "item item_checked"
             }
@@ -255,7 +261,21 @@ export default {
             //     // return "item item_wrong"
             // }
             return "item"
+        },
+        answerNoClass(checked,options, latter,isExplain) {
+            if(isExplain) {
+                if(options.isAnswer) {
+                    return "item item_checked"
+                }
+                return "item"
+            } else {
+                if(checked.indexOf(latter)>=0) {
+                    return "item item_checked"
+                }
+                return "item"
+            }
         }
+
     },
     computed: {
         ...mapState(['query']),
@@ -281,6 +301,32 @@ export default {
             }
             return false;
         },
+        saveLearnLocationPramas() {
+            var data = {
+                skillItem: this.query.skillItem,
+                skillLevel: this.query.skillLevel,
+                location: this.currentIndex,
+            };
+            if(this.query.type) {
+                data.testType = this.query.type
+            }
+            return data
+        },
+        saveAnswerPramas() {
+            var data= {
+                skillItem: this.query.skillItem,
+                skillLevel: this.query.skillLevel,
+                testId: this.currentData.id,
+
+            }
+            if(this.query.type) {
+                data.testType = this.query.type
+            }
+            if(this.currentData != undefined) {
+                data.result = this.currentData.result?1:0
+            }
+            return data
+        }
     },
     mounted() {
         this.$nextTick(()=>{
@@ -331,13 +377,18 @@ export default {
                 this.isLoading = true;
             })
         },
+        saveHistory(params) {
+            saveHistory(params).then((data)=> {
+                console.log(data);
+            })
+        },
         appendData(data,append) {
             return data.map((item)=> {
                 var elt = append.find((it)=> {
                     return it.id == item.id
                 })
                 if(elt) {
-                    item = elt;
+                    Object.assign(item, elt);
                 }
                 return item;
             });
@@ -386,8 +437,12 @@ export default {
             }
             this.isExplain=!this.isExplain
         },
+
         //选择答案
         response(letter,options){
+            if(this.isExplain) {
+                return
+            }
             if (this.currentData.type == 2 ) {
                 if (this.checked.indexOf(letter)>=0) {
                     this.checked = this.checked.replace(letter,"");
@@ -397,20 +452,23 @@ export default {
                 this.checked = this.checked.split("").sort().join("");
                 this.$set(this.currentData,'checked',this.checked);
                 if(this.checked == this.multiAnswer()) {
-                    this.$set(this.currentData,'result',true);
+                    this.$set(this.currentData,'result',1);
                 } else {
-                    this.$set(this.currentData,'result',false);
+                    this.$set(this.currentData,'result',0);
                 }
             }else{
                 this.$set(this.currentData,'checked',letter)
                 this.checked = letter;
                 if(options.isAnswer) {
-                    this.$set(this.currentData,'result',true)
+                    this.$set(this.currentData,'result',1)
                 } else {
-                    this.$set(this.currentData,'result',false)
+                    this.$set(this.currentData,'result',0)
                 }
 
             }
+            saveAnswerHistory(this.saveAnswerPramas).then((data)=> {
+                console.log(data);
+            })
         },
         multiAnswer() {
             var latter = "";
@@ -572,12 +630,12 @@ export default {
                         imgs[i].onclick=function(event){
                             event.stopPropagation();
                             var p = imgs[i].clientWidth/imgs[i].clientHeight
-                            var h = 800/p
+                            var h = 700/p
                             _this.previewerList= [(
                                 {
                                     src: this.src,
                                     h: h,
-                                    w: 800,
+                                    w: 700,
                                 }
                             )];
                             _this.imgIndex = i;

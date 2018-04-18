@@ -13,7 +13,7 @@
                     <div class="question_type"  v-if="Object.keys(currentData).length">
                         <span>{{typeArr[currentData.type-1]}}</span>
                         <span>({{currentData.score}}分/题)</span>
-                        <span class="progress"><span style="color:#10aeff">{{currentIndex+1}}</span>/{{count}}</span>
+                        <span class="progress"><span>{{currentIndex+1}}</span>/{{count}}</span>
                     </div>
                     <!-- 正文 -->
                     <div class="question_content">
@@ -50,7 +50,7 @@
                     <div class="question_type"  v-if="Object.keys(currentData).length">
                         <span>{{typeArr[currentData.type-1]}}</span>
                         <span>({{currentData.score}}分/题)</span>
-                        <span class="progress"><span style="color:#10aeff">{{currentIndex+1}}</span>/{{count}}</span>
+                        <span class="progress"><span>{{currentIndex+1}}</span>/{{count}}</span>
                     </div>
                     <!-- 正文 -->
                     <div class="question_content">
