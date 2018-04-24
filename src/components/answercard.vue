@@ -24,7 +24,7 @@
                     {{fixedTitle}}
                     <span class="level levle-right"></span>
                 </div> -->
-                <div class="classify-item" v-for="(val,key) of classifyData" ref="listGroup">
+                <div class="classify-item" v-for="(val,key) of classifyData" ref="listGroup" v-if="isClassify">
                     <div class="classify-top">
                         <span  class="level levle-left"></span>
                         {{val.title}}
@@ -34,6 +34,15 @@
                         <li  v-for="(item,index) in val.list" @click="jump(item.index)">
                             <div :class="item.result==1?'true':(item.result==0?'false':'')">
                                 {{item.index+1}}
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="" v-if="!isClassify">
+                    <ul class="tiban-list">
+                        <li  v-for="(item,index) in data" @click="jump(index)">
+                            <div :class="item.result==1?'true':(item.result==0?'false':'')">
+                                {{index+1}}
                             </div>
                         </li>
                     </ul>
@@ -50,13 +59,21 @@ import BScroll from 'better-scroll'
 const TITLE_HEIGHT = 48
 export default {
     // 父组件传递的数据
-    props:["data","count"],
+    props:{
+        data: {
+            type: Array
+        },
+        count: {
+            type: Number,
+            default: 0,
+        },
+        isClassify: {
+            type: Boolean,
+            default: true,
+        }
+    },
     data(){
         return {
-            // answered: 0,
-            // unanswered: 0,
-            // answertrue: 0,
-            // answerfalse: 0,
             isShowAnsCard: false,
             currentIndex: 0,
             titleHeight: 0,
@@ -69,12 +86,12 @@ export default {
         classifyData() {
             return classQues(this.data);
         },
-        fixedTitle() {
-            if (this.scrollY > 0) {
-              return ''
-            }
-            return this.classifyData[this.currentIndex] ? this.classifyData[this.currentIndex].title : ''
-        },
+        // fixedTitle() {
+        //     if (this.scrollY > 0) {
+        //       return ''
+        //     }
+        //     return this.classifyData[this.currentIndex] ? this.classifyData[this.currentIndex].title : ''
+        // },
         answertrue() {
             var num = 0;
             this.data.forEach((item,index)=>{
@@ -229,7 +246,7 @@ export default {
     .answercard-header li {
         color: #333;
         font-size: .36rem;
-        padding-right: .6rem;
+        padding-right: .4rem;
         height: 100%;
     }
     .answercard-header li span {

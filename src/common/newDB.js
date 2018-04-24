@@ -73,23 +73,26 @@ var classQues=function(dataList){
     var data = {};
     if(dataList) {
         dataList.map((item,index)=>{
-            item.index = index;
             if(data[typeArr[item.type-1]] == undefined) {
                 data[typeArr[item.type-1]] = [];
-                data[typeArr[item.type-1]].push(item)
+                data[typeArr[item.type-1]].push(item);
             } else {
-                data[typeArr[item.type-1]].push(item)
+                data[typeArr[item.type-1]].push(item);
             }
 
         });
     }
-
     var dataList = [];
+    var index = 0;
     for (var i in data) {
         var item = {
             title: i,
             list: data[i]
         }
+        item.list.forEach((it,ind)=> {
+            it.index = index;
+            index++
+        })
         dataList.push(item)
     }
     return dataList;

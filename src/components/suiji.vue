@@ -12,7 +12,7 @@
                 <div class="questions-item" v-if="on" key="on">
                     <div class="question_type"  v-if="Object.keys(currentData).length">
                         <span>{{typeArr[currentData.type-1]}}</span>
-                        <span>({{currentData.score}}分/题)</span>
+                        <!-- <span>({{currentData.score}}分/题)</span> -->
                         <span class="progress"><span>{{currentIndex+1}}</span>/{{count}}</span>
                     </div>
                     <!-- 正文 -->
@@ -30,7 +30,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="multiButton" v-if="currentData.type==2||currentData.type==5">
+                    <div class="multiButton" v-if="currentData.type==2&&checked&&!currentData.checked">
                         <span @click="multiButtonEvent">提交</span>
                     </div>
                     <!-- 解释 -->
@@ -39,7 +39,7 @@
                             <span class="">查看答案</span>
                         </div>
                         <div class="answer_wapp">
-                            <div class="best_explaincon pt" v-if="currentData.type!=5">{{answer}}</div>
+                            <div class="best_explaincon pt" v-if="currentData.type!=5" v-for="item in TextAnswer" v-html="item.latter+' '+item.content"></div>
                             <div class="best_explaincon pt" v-if="currentData.type==5&&item.type=='y'" v-for="item in currentData.calculations">{{item.var}}={{item.val}}&emsp;</div>
                         </div>
                         <!-- <div class="best_explaincon pt">无</div> -->
@@ -49,7 +49,7 @@
                 <div class="questions-item" v-else key="off">
                     <div class="question_type"  v-if="Object.keys(currentData).length">
                         <span>{{typeArr[currentData.type-1]}}</span>
-                        <span>({{currentData.score}}分/题)</span>
+                        <!-- <span>({{currentData.score}}分/题)</span> -->
                         <span class="progress"><span>{{currentIndex+1}}</span>/{{count}}</span>
                     </div>
                     <!-- 正文 -->
@@ -67,7 +67,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="multiButton" v-if="currentData.type==2||currentData.type==5">
+                    <div class="multiButton" v-if="currentData.type==2&&checked&&!currentData.checked">
                         <span @click="multiButtonEvent">提交</span>
                     </div>
                     <!-- 解释 -->
@@ -76,7 +76,7 @@
                             <span class="">查看答案</span>
                         </div>
                         <div class="answer_wapp">
-                            <div class="best_explaincon pt" v-if="currentData.type!=5">{{answer}}</div>
+                            <div class="best_explaincon pt" v-if="currentData.type!=5" v-for="item in TextAnswer" v-html="item.latter+' '+item.content"></div>
                             <div class="best_explaincon pt" v-if="currentData.type==5&&item.type=='y'" v-for="item in currentData.calculations">{{item.var}}={{item.val}}</div>
                         </div>
                         <!-- <div class="best_explaincon pt">无</div> -->
@@ -220,6 +220,21 @@ export default {
             }
 
             return latter;
+        },
+        TextAnswer() {
+            var answerArr = [];
+            if(this.currentData.type != 5) {
+                this.currentData.options.map((item,index)=> {
+                    if(item.isAnswer) {
+                         // latter += this.latterArr[index];
+                         answerArr.push({
+                             latter: this.latterArr[index],
+                             content: item.content
+                         })
+                    }
+                })
+            }
+            return answerArr;
         },
         // 是否收藏
         isCollect () {
@@ -576,22 +591,7 @@ export default {
         color: red;
         font-size: 0.48rem;
     }
-    .multiButton {
-        margin-top: .4rem;
-        width: 2rem;
-        height: .6rem;
-        background-color: #18b4ed;
-        border-radius: 4px;
-    }
-    .multiButton span {
-        display: block;
-        width: 100%;
-        height: 100%;
-        font-size: .3rem;
-        color: #fff;
-        text-align: center;
-        line-height: .6rem;
-    }
+
     .pswp__bg {
         background: #fff!important;
     }

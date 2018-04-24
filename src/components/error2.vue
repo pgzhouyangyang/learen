@@ -8,7 +8,7 @@
         </div>
         <!-- 切换答题模式 -->
         <div class="top-tabbar" v-if="Object.keys(currentData).length">
-            <span :class="isAnswer=='answer_no'?'active':''" @click="tabChange('answer_no')">答题模式</span>
+            <span :class="isAnswer=='answer_no'?'active':''" @click="tabChange('answer_no')">答题模式{{Object.keys(currentData).length}}</span>
             <span :class="isAnswer=='answer_yes'?'active':''" @click="tabChange('answer_yes')">背题模式</span>
         </div>
         <!-- 试题内容 -->
@@ -26,7 +26,7 @@
                     </div>
                     <!-- 选项————答题模式 -->
                     <div class="question_options" v-if="isAnswer=='answer_no'&&currentData.type!=5">
-                        <div :class="checked,currentData,latterArr[num],latterAnswer,isExplain|answerNoClass" v-for="(options,num) in currentData.options" @click="response(latterArr[num],options)" :answer="num+1">
+                        <div :class="checked, options,latterArr[num],isExplain|answerNoClass" v-for="(options,num) in currentData.options" @click="response(latterArr[num],options)" :answer="num+1">
                             <div class="item_state">
                                 {{latterArr[num]}}
                             </div>
@@ -34,9 +34,6 @@
 
                             </div>
                         </div>
-                    </div>
-                    <div class="multiButton" v-if="(isAnswer=='answer_no'&&checked&&!currentData.checked&&currentData.type==2)||(isAnswer=='answer_no'&&currentData.type==5&&!currentData.inputValue)">
-                        <span @click="multiButtonEvent">{{currentData.type==2?"确认以上选项": "提交答案"}}</span>
                     </div>
                     <!-- 选项————背题模式 -->
                     <div class="question_options" v-if="isAnswer=='answer_yes'&&currentData.type!=5">
@@ -50,12 +47,12 @@
                         </div>
                     </div>
                     <!-- 解释 -->
-                    <div class="best_explain" v-if="isExplain">
+                    <div class="best_explain" v-if="isExplain&&currentData.type == 5">
                         <div class="best_explaintitle" ref="explaintitle">
                             <span class="">查看答案</span>
                         </div>
                         <div class="answer_wapp">
-                            <div class="best_explaincon pt" v-if="currentData.type!=5" v-for="item in TextAnswer" v-html="item.latter+' '+item.content"></div>
+                            <!-- <div class="best_explaincon pt" v-if="currentData.type!=5" v-for="item in answer">{{item.latter+" "}}  {{item.content}}</div> -->
                             <div class="best_explaincon pt" v-if="currentData.type==5&&item.type=='y'" v-for="item in currentData.calculations">{{item.var}}={{item.val}}</div>
                         </div>
                     </div>
@@ -73,7 +70,7 @@
                     </div>
                     <!-- 选项————答题模式 -->
                     <div class="question_options" v-if="isAnswer=='answer_no'&&currentData.type!=5">
-                        <div :class="checked,currentData,latterArr[num],latterAnswer,isExplain|answerNoClass" v-for="(options,num) in currentData.options" @click="response(latterArr[num],options)" :answer="num+1">
+                        <div :class="checked, options,latterArr[num],isExplain|answerNoClass" v-for="(options,num) in currentData.options" @click="response(latterArr[num],options)" :answer="num+1" >
                             <div class="item_state">
                                 {{latterArr[num]}}
                             </div>
@@ -81,9 +78,6 @@
 
                             </div>
                         </div>
-                    </div>
-                    <div class="multiButton" v-if="(isAnswer=='answer_no'&&checked&&!currentData.checked&&currentData.type==2)||(isAnswer=='answer_no'&&currentData.type==5&&!currentData.inputValue)">
-                        <span @click="multiButtonEvent">{{currentData.type==2?"确认以上选项": "提交答案"}}</span>
                     </div>
                     <!-- 选项————背题模式 -->
                     <div class="question_options" v-if="isAnswer=='answer_yes'&&currentData.type!=5">
@@ -97,12 +91,12 @@
                         </div>
                     </div>
                     <!-- 解释 -->
-                    <div class="best_explain" v-if="isExplain">
+                    <div class="best_explain" v-if="isExplain&&currentData.type == 5">
                         <div class="best_explaintitle" ref="explaintitle">
                             <span class="">查看答案</span>
                         </div>
                         <div class="answer_wapp">
-                            <div class="best_explaincon pt" v-if="currentData.type!=5" v-for="item in TextAnswer" v-html="item.latter+' '+item.content"></div>
+                            <!-- <div class="best_explaincon pt" v-if="currentData.type!=5" v-for="item in answer">{{item.latter+" "}}  {{item.content}}</div> -->
                             <div class="best_explaincon pt" v-if="currentData.type==5&&item.type=='y'" v-for="item in currentData.calculations">{{item.var}}={{item.val}}</div>
                         </div>
                     </div>
@@ -122,7 +116,6 @@
         :data="dataList"
         :count="count"
         @jump="jumpIndex"
-        :isClassify="false"
         ></answercard>
          <div v-transfer-dom>
         <previewer :list="previewerList" ref="previewer" :options="options"></previewer>
@@ -132,7 +125,7 @@
 
 <script>
 import {mapMutations, mapState} from 'vuex'
-import {getTopFavorite, getFavoriteType, getFavorite, favorite, delFavorite} from '../api/request'
+import {getTopError, getErrorType, getError, favorite, delFavorite} from '../api/request'
 import {filterData} from '../common/newDB'
 import Answercard from "./answercard"
 import { Previewer, TransferDom, Loading, Icon } from 'vux'
@@ -207,10 +200,13 @@ export default {
     },
     // 生命周期函数 组件创建完成
     created(){
+        // this.$vux.loading.show({
+        //     text: '加载中'
+        // });
         this.getQuery();
-        document.title="收藏试题";
+        document.title="错题回顾";
         var parms = {...this.query};
-        getFavoriteType(parms).then((data)=> {
+        getErrorType(parms).then((data)=> {
             this.dataList = data.data.typeList;
             this.count = data.data.typeList.length;
             if(this.dataList.length) {
@@ -231,60 +227,45 @@ export default {
                 this.checked="";
             };
             this.$nextTick(()=>{
-                setTimeout( () => {
-                    this.imgbindclick();
-                    if(this.currentData.inputValue) {
-                        for(var i in this.currentData.inputValue) {
-                            document.querySelector("#"+i).value = this.currentData.inputValue[i].value;
-                            document.querySelector("#"+i).style.borderColor = this.currentData.inputValue[i].borderColor;
-                            document.querySelector("#"+i).disabled = true;
-                        }
+                var timer = setInterval(()=> {
+                    if(this.isLoading) {
+                        setTimeout( () => {
+                            this.imgbindclick();
+                        },600)
+                        clearInterval(timer)
                     }
-                },600)
+                },10)
+
             });
         }
     },
     filters:{
         answerYesClass(item){
             if(item.isAnswer){
-                return "item item_right"
+                return "item item_checked"
             }
             // if(ans.checked&&ans.checked.indexOf(latter)>=0){
             //     // return "item item_wrong"
             // }
             return "item"
         },
-        answerNoClass(checked,currentData,latter,latterAnswer,isExplain) {
-            if(currentData.type ==2) {
-                if(!currentData.checked&&checked.indexOf(latter)>=0){
+        answerNoClass(checked,options, latter,isExplain) {
+            if(isExplain) {
+                if(options.isAnswer) {
                     return "item item_checked"
                 }
-                if(currentData.checked&&currentData.result == 0) {
-                    if(latterAnswer.indexOf(latter)>=0) {
-                        return "item item_right"
-                    } else {
-                        return "item item_wrong"
-                    }
-                } else if(currentData.checked&&currentData.result) {
-                    if(latterAnswer.indexOf(latter)>=0) {
-                        return "item item_right"
-                    }
-                }
+                return "item"
             } else {
-                if(currentData.checked && latterAnswer == latter) {
-                      return "item item_right"
+                if(checked.indexOf(latter)>=0) {
+                    return "item item_checked"
                 }
-                if(currentData.checked&&latterAnswer!=latter&&!currentData.result){
-                    return "item item_wrong"
-                }
+                return "item"
             }
-            return "item"
         }
-
     },
     computed: {
         ...mapState(['query']),
-        TextAnswer() {
+        answer() {
             var answerArr = [];
             if(this.currentData.type != 5) {
                 this.currentData.options.map((item,index)=> {
@@ -298,17 +279,6 @@ export default {
                 })
             }
             return answerArr;
-        },
-        latterAnswer() {
-            var answerStr = "";
-            if(this.currentData.type != 5) {
-                this.currentData.options.map((item,index)=> {
-                    if(item.isAnswer) {
-                         answerStr += this.latterArr[index];
-                    }
-                })
-            }
-            return answerStr;
         },
         // 是否收藏
         isCollect () {
@@ -368,9 +338,10 @@ export default {
             this.ids = ids
         },
         getData(fn) {
+            this.isLoading = true;
             var parms = {...this.query};
             parms.ids =  this.ids
-            getFavorite(parms).then((data)=> {
+            getError(parms).then((data)=> {
                 this.dataList = this.appendData(this.dataList,data.data.testList);
                 this.currentData = this.dataList[this.currentIndex];
                 this.$vux.loading.hide();
@@ -434,8 +405,8 @@ export default {
         },
         //选择答案
         response(letter,options){
-            if(this.currentData.checked) {
-                return;
+            if(this.isExplain) {
+                return
             }
             if (this.currentData.type == 2 ) {
                 if (this.checked.indexOf(letter)>=0) {
@@ -444,63 +415,29 @@ export default {
                     this.checked += letter;
                 }
                 this.checked = this.checked.split("").sort().join("");
+                this.$set(this.currentData,'checked',this.checked);
+                if(this.checked == this.multiAnswer()) {
+                    this.$set(this.currentData,'result',true);
+                } else {
+                    this.$set(this.currentData,'result',false);
+                }
             }else{
                 this.$set(this.currentData,'checked',letter)
                 this.checked = letter;
                 if(options.isAnswer) {
-                    this.$set(this.currentData,'result',1)
+                    this.$set(this.currentData,'result',true)
                 } else {
-                    this.$set(this.currentData,'result',0)
+                    this.$set(this.currentData,'result',false)
                 }
-                this.isExplain = true;
+
             }
-
-
         },
-        multiButtonEvent() {
-            if(this.currentData.type == 5) {
-                var  inputEle = document.querySelectorAll("input");
-                this.currentData.inputValue = {};
-                this.$set(this.currentData,'result',true);
-                this.currentData.calculations.map((item,index)=> {
-                    if(item.type == "y") {
-                        var inputEle = document.querySelector("#"+item.var);
-                        var resultVal = item.val.substring(0,inputEle.value.length);
-                        this.currentData.inputValue[item.var] = {
-                            value: inputEle.value
-                        };
-                        if(inputEle.value != resultVal) {
-                            this.currentData.inputValue[item.var].borderColor = "red";
-                            inputEle.style.borderColor = "red";
-                            inputEle.disabled = true;
-                            this.isExplain = true;
-                            this.$set(this.currentData,'result',0);
-                            return
-                        }
-                    }
-                })
-            } else if (this.currentData.type == 2) {
-                if(this.checked == "") {
-                    // 显示文字
-                    this.$vux.toast.show({
-                        type: 'text',
-                        text: '请至少选择一个答案',
-                        time: 1000,
-                        position: 'middle'
-                    });
-                    return;
-                }
-
-                if(this.checked == this.latterAnswer) {
-                    this.$set(this.currentData,'result',1);
-                } else {
-                    this.$set(this.currentData,'result',0);
-
-                }
-                this.$set(this.currentData,'checked',this.checked);
-            };
-            this.isExplain = true;
-
+        multiAnswer() {
+            var latter = "";
+            this.answer.forEach((item,index)=> {
+                latter += item.latter
+            })
+            return latter
         },
         // 上一题
         preEvent() {
@@ -514,7 +451,6 @@ export default {
                 });
                 return;
             };
-
             this.translateName = "translate-right";
             this.on = !this.on;
             this.currentIndex--;
@@ -541,13 +477,13 @@ export default {
                 });
                 return;
             }
-            this.translateName = "translate-left"
-            this.on = !this.on;
-            this.currentIndex++
+            this.currentIndex++;
             if(this.currentIndex+1<this.count&&!this.dataList[this.currentIndex+1].content) {
                 this.splitIds("next",this.currentIndex+1);
                 this.getData();
             }
+            this.translateName = "translate-left"
+            this.on = !this.on;
             if(this.isAnswer == "answer_no") {
                 this.isExplain = false;
             } else {
